@@ -17,3 +17,4 @@ article_titles = soup.find_all("h2", class_="article-title")
 for title_element in article_titles:
     title_text = title_element.get_text()
     print("Article Title:", title_text)
+# jenkins demo
