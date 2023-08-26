@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 
+#working demo 
+
 # URL of the webpage to scrape
 url = "https://www.example-news-site.com"
 
