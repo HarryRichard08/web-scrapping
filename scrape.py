@@ -1,14 +1,14 @@
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.operators.bash_operator import BashOperator
+from airflow.operators.postgres_operator import PostgresOperator
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import csv
+import psycopg2
 
-#demmo
-
+# Define a function to scrape the website and return data as a variable
 def scrape_website():
     # Make a request to the website
     r = requests.get("https://books.toscrape.com")
@@ -29,30 +29,51 @@ def scrape_website():
         availability = book.find('p', class_='instock availability').text.strip()
         book_details.append([title, price, availability])
 
-    # Write the book details to a CSV file
-    with open('/tmp/book_details.csv', 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(['Title', 'Price', 'Availability'])
-        writer.writerows(book_details)
+    return book_details
 
-
-def clean_data():
-    # Load the data from CSV
-    data = pd.read_csv('/tmp/book_details.csv')
+# Define a function to clean the data
+def clean_data(book_details):
+    # Convert the book details to a DataFrame
+    data = pd.DataFrame(book_details, columns=['Title', 'Price', 'Availability'])
 
     # Perform data cleaning here, e.g., removing £ sign from price
     data['Price'] = data['Price'].str.replace('£', '')
 
-    # Save the cleaned data back to CSV
-    data.to_csv('/tmp/book_details_clean.csv', index=False)
+    return data
 
+# Define a function to insert cleaned data into PostgreSQL
+def insert_data_into_postgres(data):
+    # Define your PostgreSQL connection parameters
+    DB_HOST = "db-postgresql-sfo3-smartbot-1db-do-user-8157534-0.b.db.ondigitalocean.com"
+    DB_PORT = "25060"
+    DB_NAME = "alpha"
+    DB_USER = "doadmin"
+    DB_PASSWORD = "mq2i4pwpvlen6mho"
+    DB_URI = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
+    # Connect to the PostgreSQL database
+    conn = psycopg2.connect(DB_URI)
+    cur = conn.cursor()
+
+    # Insert data into the PostgreSQL database
+    for _, row in data.iterrows():
+        cur.execute(
+            "INSERT INTO your_table_name (title, price, availability) VALUES (%s, %s, %s)",
+            (row['Title'], row['Price'], row['Availability'])
+        )
+
+    # Commit the changes and close the connection
+    conn.commit()
+    conn.close()
+
+# Define default arguments for the DAG
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2023, 8, 4),
     'retries': 1,
 }
 
+# Create the DAG
 dag = DAG(
     'book_scraper',
     default_args=default_args,
@@ -60,6 +81,7 @@ dag = DAG(
     schedule_interval='@daily',
 )
 
+# Create tasks using PythonOperator
 scrape_website_task = PythonOperator(
     task_id='scrape_website',
     python_callable=scrape_website,
@@ -69,15 +91,17 @@ scrape_website_task = PythonOperator(
 clean_data_task = PythonOperator(
     task_id='clean_data',
     python_callable=clean_data,
+    op_args=[scrape_website_task.output],  # Pass the output of the previous task
     dag=dag,
 )
 
-# Assume you want to move the clean data to a new location
-transfer_data_task = BashOperator(
-    task_id='transfer_data',
-    bash_command='mv /tmp/book_details_clean.csv ~/store_files_airflow/',
+# Create a task to insert data into PostgreSQL
+insert_data_task = PythonOperator(
+    task_id='insert_data_into_postgres',
+    python_callable=insert_data_into_postgres,
+    op_args=[clean_data_task.output],  # Pass the output of the previous task
     dag=dag,
 )
 
 # Define task dependencies
-scrape_website_task >> clean_data_task >> transfer_data_task
+scrape_website_task >> clean_data_task >> insert_data_task
