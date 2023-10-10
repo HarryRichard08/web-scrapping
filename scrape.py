@@ -56,7 +56,7 @@ def insert_data_into_postgres(data):
     # Insert data into the PostgreSQL database
     for _, row in data.iterrows():
         cur.execute(
-            "INSERT INTO books_details (title, price, availability) VALUES (%s, %s, %s)",
+            "INSERT INTO book_details (title, price, availability) VALUES (%s, %s, %s)",
             (row['Title'], row['Price'], row['Availability'])
         )
 
@@ -76,7 +76,7 @@ dag = DAG(
     'book_scraper',
     default_args=default_args,
     description='A simple book scraper',
-    schedule_interval='@daily',
+    schedule_interval='None',
 )
 
 # Create tasks using PythonOperator
