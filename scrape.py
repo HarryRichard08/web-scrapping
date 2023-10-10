@@ -6,6 +6,9 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import psycopg2
 
+
+#smart bots pipeline
+
 # Define a function to scrape the website and return data as a variable
 def scrape_website():
     # Make a request to the website
