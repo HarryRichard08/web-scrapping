@@ -37,6 +37,12 @@ def clean_data(book_details):
     # Perform data cleaning here, e.g., removing £ sign from price
     data['Price'] = data['Price'].str.replace('£', '')
 
+    # Remove any non-numeric characters from the "Price" column
+    data['Price'] = data['Price'].str.replace('[^\d.]', '', regex=True)
+
+    # Encode and decode Price data to handle encoding issues
+    data['Price'] = data['Price'].str.encode('utf-8').str.decode('utf-8')
+
     return data
 
 # Define a function to insert cleaned data into PostgreSQL
@@ -73,10 +79,10 @@ default_args = {
 
 # Create the DAG
 dag = DAG(
-    'book_scraper',
+    'scraper',
     default_args=default_args,
     description='A simple book scraper',
-    schedule_interval='None',
+    schedule_interval='@once',
 )
 
 # Create tasks using PythonOperator
