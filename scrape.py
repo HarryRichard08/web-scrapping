@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import csv
 import psycopg2
-#add comment to check jenkins pipeline
+
 # Define a function to scrape the website and return data as a variable
 def scrape_website():
     # Make a request to the website
