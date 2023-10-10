@@ -1,13 +1,11 @@
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.operators.postgres_operator import PostgresOperator
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
-import csv
 import psycopg2
-#demo 
+
 # Define a function to scrape the website and return data as a variable
 def scrape_website():
     # Make a request to the website
@@ -19,7 +17,7 @@ def scrape_website():
     # Find all the books on the page
     books = soup.find_all('article', class_='product_pod')
 
-    # Initialize empty list for storing book details
+    # Initialize an empty list for storing book details
     book_details = []
 
     # Iterate through each book and get details
@@ -58,7 +56,7 @@ def insert_data_into_postgres(data):
     # Insert data into the PostgreSQL database
     for _, row in data.iterrows():
         cur.execute(
-            "INSERT INTO your_table_name (title, price, availability) VALUES (%s, %s, %s)",
+            "INSERT INTO books_details (title, price, availability) VALUES (%s, %s, %s)",
             (row['Title'], row['Price'], row['Availability'])
         )
 
