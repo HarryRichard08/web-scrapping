@@ -8,6 +8,7 @@ import psycopg2
 
 # demo
 #smart bots pipeline check
+#check
 
 # Define a function to scrape the website and return data as a variable
 def scrape_website():
