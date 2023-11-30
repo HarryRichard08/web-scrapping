@@ -11,6 +11,7 @@ import psycopg2
 #check
 #test is the key
 #test is dangerous
+#mul
 
 # Define a function to scrape the website and return data as a variable
 def scrape_website():
