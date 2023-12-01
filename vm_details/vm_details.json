@@ -3,5 +3,6 @@
     "username": "root",
     "password": "oyMvIJ7Y317SWQg8",
     "instance_name": "Pandora",
-    "instance_type": "ubuntu"
+    "instance_type": "ubuntu",
+    "environment": "staging"
 }
